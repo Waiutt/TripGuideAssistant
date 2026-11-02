@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NanjingTrip · 金陵时空指挥台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2356CFA0'/%3E%3Ctext x='16' y='23' font-size='19' text-anchor='middle' fill='%23003826'%3E行%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= 顶栏 ================= -->
+  <div id="offlineBanner" class="banner hidden">
+    <span id="offlineText">连不上本地服务</span>
+    <button class="btn ghost sm" id="btnBannerRetry" type="button">重试</button>
+  </div>
+  <header class="topbar">
+    <span class="brand"><i>行</i>NanjingTrip</span>
+    <select id="city" class="pill" style="height:26px;background:var(--sunken)" title="切换城市"></select>
+    <nav class="nav" id="nav">
+      <button data-page="home">起始页</button>
+      <button data-page="work" class="on">工作区</button>
+      <button data-page="map">地图</button>
+      <button id="btnCalendar">日历</button>
+      <button id="btnVersions">版本</button>
+    </nav>
+    <span class="spacer"></span>
+    <div class="datenav">
+      <button class="iconbtn" id="prev" title="前一天">‹</button>
+      <span class="d" id="dateLabel">—</span>
+      <button class="iconbtn" id="next" title="后一天">›</button>
+      <button class="btn sm" id="today">今天</button>
+      <!-- 当日天气：高德只给今天起 4 天，窗口外如实显示"无预报" -->
+      <span class="pill wx" id="wxPill" title="当日天气">—</span>
+    </div>
+    <div class="tb-right">
+      <span class="pill" id="modePill"><span class="dot"></span><span id="modeText">…</span></span>
+      <button class="btn sm" id="btnAI">AI 助手</button>
+      <button class="btn sm" id="btnMore">更多</button>
+      <span class="ver" id="verBadge">v2.0 · WEB</span>
+    </div>
+  </header>
+
+  <!-- ================= 起始页：行程顾问台（主入口） ================= -->
+  <section class="home hidden" id="pageHome">
+    <div class="home-in">
+      <div class="hello">
+        <div class="t" id="helloTitle">晚上好，金陵</div>
+        <div class="s" id="helloSub">把想法丢给我：几天、几个人、想玩什么——没有头绪也行</div>
+      </div>
+
+      <div class="strap" id="homeStrap"></div>
+
+      <div class="consult" id="consultBox">
+        <div class="consult-log" id="consultLog"></div>
+        <div class="consult-chips" id="consultChips"></div>
+        <div class="consult-tools">
+          <button class="btn ghost sm" id="btnConsultReset" type="button">重新开始</button>
+          <span class="cap">说了不合意就重来：清掉这轮偏好，不从旧话题里带东西</span>
+        </div>
+        <form class="hinput" id="homeForm">
+          <textarea id="homeInput" rows="1" autocomplete="off"
+            placeholder="比如：9月10号到16号在南京玩，我比较懒、起得晚，两个人，酒店没定，你帮我安排&#10;也可以直接报地名：总统府 夫子庙 老门东&#10;Enter 发送，Shift+Enter 换行"></textarea>
+          <button class="btn primary" type="submit">交给顾问 →</button>
+        </form>
+      </div>
+
+      <div>
+        <div class="hd" style="display:flex;align-items:center;justify-content:space-between;
+             margin-bottom:8px">
+          <span style="font-size:16px;font-weight:600">建议去处（来自城市包）</span>
+          <span class="cap" id="recHint"></span>
+        </div>
+        <div class="cards4" id="homeRecs"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 首屏载入态：数据到之前不显示半空的工作区（否则用户会看到一片破折号） -->
+  <div class="boot" id="boot"><i class="spin"></i>正在载入今日行程…</div>
+
+  <!-- ================= 工作区 ================= -->
+  <main class="body hidden" id="pageWork">
+    <!-- 左栏 340 -->
+    <aside class="col side">
+      <div class="block cal">
+        <div class="hd">研判维治
+          <span class="cal-nav">
+            <button class="iconbtn" id="calPrev" title="上个月">‹</button>
+            <b id="calMonth">—</b>
+            <button class="iconbtn" id="calNext" title="下个月">›</button>
+          </span>
+        </div>
+        <div class="cal-week">
+          <span>一</span><span>二</span><span>三</span><span>四</span>
+          <span>五</span><span>六</span><span>日</span>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-foot">
+          <div class="cf1" id="calNow">—</div>
+          <div class="cf2" id="wsMeta">—</div>
+        </div>
+      </div>
+      <div class="block" id="profileBlock">
+        <div class="hd">我的偏好 <span>用户</span></div>
+        <div class="pf-row">
+          <select id="pfSelect" class="pf-select" title="切换用户档案"></select>
+          <button class="btn ghost sm" id="pfEdit">编辑</button>
+        </div>
+        <div class="cap" id="pfSummary">—</div>
+      </div>
+      <div class="block">
+        <div class="hd">时空基准锚点 <span>住</span></div>
+        <div class="anchor">
+          <span class="k">起点</span>
+          <span class="v" id="anchorFrom">未设定</span>
+          <button class="btn ghost sm" id="btnLodging">设定</button>
+        </div>
+        <div class="anchor">
+          <span class="k">终点</span>
+          <span class="v" id="anchorTo">同上</span>
+          <button class="x btn ghost sm" id="btnClearLodging" title="清除">×</button>
+        </div>
+      </div>
+      <div class="block">
+        <div class="hd">出行参数 <span>设置</span></div>
+        <div class="slider">
+          <span class="cap">缓冲</span>
+          <input type="range" id="rngBuffer" min="0" max="30" step="5">
+          <span class="val" id="valBuffer">10 分</span>
+        </div>
+        <div class="kv"><span>可排时段</span><b id="wsWindow">08:00-22:00</b></div>
+        <div class="kv"><span>默认方式</span><b id="wsModeDefault">—</b></div>
+        <div class="toggle"><span>按我给顺序排</span><span class="sw" id="swKeepOrder"></span></div>
+        <div class="toggle"><span>每段自动选最快</span><span class="sw" id="swAutoMode"></span></div>
+      </div>
+      <div class="block">
+        <div class="hd">容错机制 <span>FALLBACK</span></div>
+        <div class="toggle"><span>强制离线</span><span class="sw" id="swOffline"></span></div>
+        <div class="toggle"><span>营业与预约提示</span>
+          <span class="pill" id="pillNoticeCount">—</span></div>
+        <div class="toggle"><span>冲突建议</span>
+          <span class="pill" id="pillConflictCount">—</span></div>
+      </div>
+    </aside>
+
+    <!-- 中栏 -->
+    <section class="col center">
+      <div class="chead">
+        <div class="ct">
+          <h1 id="dayTitle">—</h1>
+          <div class="sub" id="daySub">—</div>
+        </div>
+        <div class="metrics" id="metrics"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:var(--sm);flex-wrap:wrap">
+        <span class="cap">出行方式</span>
+        <div class="seg" id="segTransit"></div>
+        <span class="spacer"></span>
+        <button class="btn sm" id="btnReplan">重新规划</button>
+      </div>
+
+      <div class="tlcard">
+        <div style="display:flex;align-items:center;gap:var(--sm);margin-bottom:var(--md)">
+          <span style="font-size:16px;font-weight:600">今日时间轴</span>
+          <span class="pill" id="pillItemCount"><span class="dot"></span>—</span>
+          <span class="spacer"></span>
+          <span class="cap" id="tlHint"></span>
+        </div>
+        <div class="tl" id="timeline"></div>
+      </div>
+    </section>
+
+    <!-- 右栏 420 -->
+    <aside class="col right">
+      <div class="agent">
+        <div class="hd">
+          <span class="t">AI 伴游决策智能体</span>
+          <span class="spacer"></span>
+          <span class="pill solid" id="agentState"><span class="dot"></span>待命</span>
+        </div>
+        <div class="grid" id="agentKpi"></div>
+      </div>
+      <div class="block">
+        <div class="hd">推理链 <span id="chainHint">RECENT</span></div>
+        <div id="chain"></div>
+      </div>
+      <div class="block">
+        <div class="hd">主动报告 <span>REPORT</span></div>
+        <div class="report" id="report">暂无需要提醒的事项。</div>
+      </div>
+      <div class="block">
+        <div class="hd">各方式全程耗时 <span>COMPARE</span></div>
+        <div class="bars" id="modeBars"></div>
+      </div>
+      <div class="block">
+        <div class="hd">本日出行估算 <span>ESTIMATE</span></div>
+        <div id="ecoStats" class="report">—</div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ================= 地图页 ================= -->
+  <section class="mapview hidden" id="pageMap">
+    <div class="mv-hd">
+      <b id="mvTitle">当日位置</b>
+      <span class="cap" id="mvSub">—</span>
+      <span class="spacer"></span>
+      <div class="mv-ctl">
+        <span class="seg" id="mvSeg"></span>
+        <button class="iconbtn" id="mvOut" title="缩小">−</button>
+        <span class="mv-zoom mono" id="mvZoom">z12</span>
+        <button class="iconbtn" id="mvIn" title="放大">＋</button>
+        <button class="btn sm" id="mvFit">显示全部</button>
+      </div>
+    </div>
+    <div class="mv-body">
+      <aside class="mv-list" id="mvList"></aside>
+      <div class="mv-stage" id="mvStage">
+        <div class="mv-empty cap">正在取图…</div>
+      </div>
+    </div>
+    <div class="mv-foot" id="mvFoot"></div>
+  </section>
+
+  <!-- ================= 悬浮输入 ================= -->
+  <form class="inputbar hidden" id="addForm">
+    <textarea id="addInput" rows="1" autocomplete="off"
+      placeholder="一整段也能贴：明天上午去南京博物院看展2小时，中午新街口吃饭，下午三点先锋书店1.5小时，晚上老门东（Enter 提交，Shift+Enter 换行）"></textarea>
+    <button class="btn primary" type="submit">立即研判</button>
+  </form>
+
+  <!-- 预览卡 -->
+  <div class="sheet hidden" id="previewSheet">
+    <div class="hd">解析结果 <span class="cap">确认后才会写入时间轴</span>
+      <button class="iconbtn" id="btnCancelPreview">×</button></div>
+    <div class="bd" id="previewBody"></div>
+    <div class="ft">
+      <button class="btn" id="btnCancelPreview2">取消</button>
+      <button class="btn primary" id="btnConfirmAdd">确认写入</button>
+    </div>
+  </div>
+
+  <div class="menu hidden" id="ctxMenu"></div>
+
+  <div class="drawer-mask hidden" id="aiMask"></div>
+  <aside class="drawer hidden" id="aiDrawer">
+    <div class="hd">AI 助手 <span class="spacer"></span>
+      <button class="iconbtn" id="btnCloseAI">×</button></div>
+    <div class="chat" id="chatLog"></div>
+    <form class="chat-input" id="chatForm">
+      <textarea id="chatInput" rows="1" autocomplete="off"
+        placeholder="问点什么，或直接把一整天的安排说给我（Enter 发送，Shift+Enter 换行）"></textarea>
+      <button class="btn primary sm" type="submit">发送</button>
+    </form>
+  </aside>
+
+  <div id="toast" class="toast"></div>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

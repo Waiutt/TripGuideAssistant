@@ -1,0 +1,61 @@
+# ---- 隐私与机密（绝不入库）----
+secrets.json
+config.json
+profiles.json
+*.db
+*.db-wal
+*.db-shm
+
+# ---- 交付与构建产物 ----
+_pkg_build/
+dist/
+build/
+*.spec
+*.exe
+*.zip
+*.docx
+*.pdf
+*.doc
+
+# ---- 学校材料与含个人信息的文档 ----
+附件1*
+附件2*
+软件设计II*
+*封面*
+*评分表*
+
+# ---- 报告：只保留可公开的 markdown 源 ----
+# 设计报告与过程记录整体不入公开仓库（含学校表格与个人信息）
+05_设计报告/
+06_图表/
+07_测试留档/
+01_需求分析/
+02_系统设计/
+03_详细设计与实现/
+04_测试/
+设计稿/
+*.png
+!code/nanjingtrip/web/*.svg
+
+# ---- 缓存 ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+_xianlin_raw.json
+_*.py
+_*.md
+_*.xml
+_*.txt
+
+# ---- 课件/工作档与内部材料 ----
+*.bak
+项目计划与分工.md
+交付说明.md
+Stitch提示词.md
+tools/stitch_mcp_待挂载.yml
+tools/packaging/*.bat
+tools/packaging/换电脑运行说明.md
